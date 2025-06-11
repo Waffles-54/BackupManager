@@ -1,6 +1,5 @@
 """
 backup_manager package
-
 Contains core backup management functionality.
 """
 

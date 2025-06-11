@@ -1,6 +1,9 @@
 import os
 import sys
-import tomllib
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:
+    import tomli as tomllib  
 
 class TOMLValidator:
     def __init__(self):
@@ -8,6 +11,7 @@ class TOMLValidator:
         self.REQUIRED_STRUCTURE = {
             "general": {
                 "doSyncSystem": bool,
+                "doSyncBackup": bool,
                 "doDailyUpdates": bool,
                 "doWeeklyUpdates": bool,
                 "doMonthlyUpdate": bool,
@@ -30,27 +34,24 @@ class TOMLValidator:
             }
         }
 
-    def check_toml(self):
-        ###################################################
-        # Try to open the toml file and load its contents #
-        ###################################################
+    def check_toml(self, logger):
+        # Try to open the toml file and load its contents
+        logger.info("Starting TOML Validation...")
         try:
             with open(self.SETTINGS_PATH, "rb") as f:
                 settings = tomllib.load(f)
         except FileNotFoundError:
-            print(f"[ERROR] settings.toml not found at {self.SETTINGS_PATH}")
+            logger.error(f"settings.toml not found at {self.SETTINGS_PATH}")
             sys.exit(1)
         except tomllib.TOMLDecodeError as e:
-            print(f"[ERROR] Failed to parse TOML: {e}")
+            logger.error(f"Failed to parse TOML: {e}")
             sys.exit(1)
 
         missing = []
         type_errors = []
         general_errors = []
 
-        ###########################
-        # Validate toml structure #
-        ########################### 
+        # Validate toml structure
         for section, keys in self.REQUIRED_STRUCTURE.items():
             if section not in settings:
                 missing.append(f"[{section}] (entire section missing)")
@@ -70,59 +71,55 @@ class TOMLValidator:
 
         if missing or type_errors:
             if missing:
-                print(f"[ERROR] Missing required keys:\n - " + "\n - ".join(missing))
+                logger.error(f"Missing required keys:\n - " + "\n - ".join(missing))
             if type_errors:
-                print(f"[ERROR] Type errors:\n - " + "\n - ".join(type_errors))
+                logger.error(f"Type errors:\n - " + "\n - ".join(type_errors))
             sys.exit(1)
 
-        ####################
-        #  Validate paths  #
-        ####################
+        #  Validate paths
         if not os.path.isdir(settings["paths"]["backupLocation"]):
-            general_errors.append(f"[ERROR] Unable to open backupLocation")
+            general_errors.append(f"Unable to open backupLocation")
 
         for value in settings["paths"]["syncPaths"]:
             if not os.path.isdir(value):
-                general_errors.append(f"[ERROR] Unable to open syncPath: {value}")
+                general_errors.append(f"Unable to open syncPath: {value}")
 
         for value in settings["paths"]["backupPaths"]:
             if not os.path.isdir(value):
-                general_errors.append(f"[ERROR] Unable to open backupPath: {value}")
+                general_errors.append(f"Unable to open backupPath: {value}")
 
-        ####################
-        ### Limit Checks ###
-        ####################
+        # Limit Checks
         if settings["limits"]["allowedWeeklyBackups"] not in range(0, 5):
-            general_errors.append(f"[ERROR] Value bounding error in allowedWeeklyBackups: should be between (0-4)")
+            general_errors.append(f"Value bounding error in allowedWeeklyBackups: should be between (0-4)")
 
         if settings["limits"]["allowedMonthlyBackups"] not in range(0, 13):
-            general_errors.append(f"[ERROR] Value bounding error in allowedMonthlyBackups: should be between (0-12)")
+            general_errors.append(f"Value bounding error in allowedMonthlyBackups: should be between (0-12)")
 
         if settings["limits"]["allowedYearlyBackups"] < 0:
-            general_errors.append(f"[ERROR] Value bounding error in allowedYearlyBackups: should be between (0-inf)")
+            general_errors.append(f"Value bounding error in allowedYearlyBackups: should be between (0-inf)")
 
         # Schedule checks
         if settings["schedule"]["dateOfWeekly"] not in range(0, 7):
-            general_errors.append(f"[ERROR] Value bounding error in dateOfWeekly: should be between (0-6)")
+            general_errors.append(f"Value bounding error in dateOfWeekly: should be between (0-6)")
 
         if settings["schedule"]["dateOfMonthly"] not in range(1, 29):
-            general_errors.append(f"[ERROR] Value bounding error in dateOfMonthly: should be between (1-28)")
+            general_errors.append(f"Value bounding error in dateOfMonthly: should be between (1-28)")
 
         if settings["schedule"]["dateOfYearly"][0] not in range(1, 13):
-            general_errors.append(f"[ERROR] Value bounding error in dateOfYearly[0]: should be between (1-12)")
+            general_errors.append(f"Value bounding error in dateOfYearly[0]: should be between (1-12)")
 
         if settings["schedule"]["dateOfYearly"][1] not in range(1, 29):
-            general_errors.append(f"[ERROR] Value bounding error in dateOfYearly[1]: should be between (1-28)")
+            general_errors.append(f"Value bounding error in dateOfYearly[1]: should be between (1-28)")
         
         if general_errors:
             for error in general_errors:
-                print(error)
-            # sys.exit(1)
+                logger.error(error)
+            sys.exit(1)
 
-        print("[OK] settings.toml has been validated")
+        logger.info("settings.toml has been validated")
         return settings
 
 if __name__ == "__main__":
 
-    validator = TOMLValidator()   # create an instance
-    validator.check_toml()         # call instance method correctly
+    validator = TOMLValidator()
+    validator.check_toml()

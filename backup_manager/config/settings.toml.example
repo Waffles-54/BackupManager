@@ -1,14 +1,15 @@
 # settings.toml
 [general]                               ###  General configuration settings ###
-doSyncSystem    = true                  # Want to sync?    (True/False) (Requires configured syncFile)
-doDailyUpdates  = true                  # Daily updates?   (True/False) (No further requirements)
-doWeeklyUpdates = true                  # Weekly updates?  (True/False) (Requires configured allowedWeeklyBackups, dateOfWeekly)
-doMonthlyUpdate = true                  # Monthly updates? (True/False) (Requires configured allowedMonthlyBackups, dateOfMonthly)
-doYearlyUpdates = true                  # Yearly updates?  (True/False) (Requires configured allowedYearlyBackups, dateOfYearly)
+doSyncSystem    = false                 # Want to sync?         (True/False) (Requires configured syncFile)
+doSyncBackup    = false                 # Create sync backups?  (True/False) (No further requirements)
+doDailyUpdates  = true                  # Daily updates?        (True/False) (No further requirements)
+doWeeklyUpdates = true                  # Weekly updates?       (True/False) (Requires configured allowedWeeklyBackups, dateOfWeekly)
+doMonthlyUpdate = true                  # Monthly updates?      (True/False) (Requires configured allowedMonthlyBackups, dateOfMonthly)
+doYearlyUpdates = true                  # Yearly updates?       (True/False) (Requires configured allowedYearlyBackups, dateOfYearly)
 
 [paths]                                 ### File paths for system configuration ###
-backupLocation = "/path/to/backups"     # Where will backups be kept?   (Validated on program launch)
-syncPaths = [                           # Paths to syncronize           (Automatically backed up)
+backupLocation = ''                     # Where will backups be kept?   (Validated on program launch)
+syncPaths = [                           # Paths to syncronize (Automatically backed up)
     # "path/to/sync",
     # "path/to/sync_2"
 ]
@@ -24,8 +25,6 @@ allowedYearlyBackups = 99               # Max count of Yearly backups that can e
 
 [schedule]                              # Scheduler for backup timing (linux only, works with cron)
 dateOfWeekly = 0                        # What day for weekly backups?                  (0-6)
-dateOfMonthly = 28                      # What day for monthly backups?                 (0-28)
+dateOfMonthly = 28                      # What day for monthly backups?                 (1-28)
 dateOfYearly = [12, 28]                 # What day for yearly backups?                  (1-12, 1-28)
 
-[backup]                                ### Backup configuration settings ###
-archive_format = "zip"                  # "zip" or "tar" supported

@@ -1,23 +1,25 @@
 # main.py at root
 
-import logging
-from scripts.check_deps import check_dependencies
+from scripts.check_deps import DEPValidator
 from scripts.check_toml import TOMLValidator
-import runpy
+from backup_manager.__main__ import main as backup_main
+from backup_manager.logging_config import setup_logging
 import sys
 
 def main():
-    validator = TOMLValidator()
+    """Program driver, prepares and validates the system to launch the backup_manager package"""
+    logger = setup_logging()
+    logger.info("Starting backup manager program")
 
-    logging.basicConfig(level=logging.INFO)
-    check_dependencies()  # custom pre-checks before running package
-    settings = validator.check_toml()
-    print()
-
+    tomlValidator = TOMLValidator()
+    depValidator = DEPValidator()
+    
     try:
-        runpy.run_module("backup_manager", run_name="__main__")
+        depValidator.check_dependencies(logger)
+        settings = tomlValidator.check_toml(logger)
+        backup_main(logger, settings, argv=sys.argv[1:])
     except Exception as e:
-        logging.error(f"Fatal error: {e}")
+        logger.error(f"Fatal error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

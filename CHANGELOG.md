@@ -10,6 +10,14 @@ All notable changes to this project will be documented here.
 - implemented toml validation    (scripts/check_toml.py)
 - implemented dependency checker (scripts/check_deps.py)
 - Modifications and final decision on LISCENCE (subject to change)
+##### 2025/06/10
+- Implemented syncronization system, fixed various bugs from the old system
+- Enforced root main program passthrough (DEV)
+- Implemented logging system
+- Removed print logging system
+- Implemented backup system
+- Code cleanup & documentation
+- 
 
 <!-- ## [0.1.0] - YYYY-MM-DD
 - Initial backup system logic

@@ -5,10 +5,8 @@ import os
 class PrepSystem:
     def __init__(self):
         pass
-    
 
-    # Validates settings.toml #TODO
-    def conf_check(self):
+    def conf_load(self):
         # your code here
         return True
     
