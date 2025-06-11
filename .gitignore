@@ -1,0 +1,13 @@
+# .gitignore
+# Folders
+logs/
+__pycache__/
+old_sys/
+
+# Files
+*.log
+*.pyc
+.env
+
+# Development
+TODO.md
