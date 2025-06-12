@@ -17,9 +17,11 @@ All notable changes to this project will be documented here.
 - Removed print logging system
 - Implemented backup system
 - Code cleanup & documentation
-- 
-
-<!-- ## [0.1.0] - YYYY-MM-DD
-- Initial backup system logic
-- Config via `settings.toml`
-- Dependency check script added -->
+##### 2025/06/10
+- Semantic updates
+- Expanded TOML configuration and quality of validation
+- Implemented the rest of the backupSystem
+- Implemented limit checks and automated pruning of archives
+- Seperated sync systems from backup systems (decoupling)
+- Enhanced error checking and logging
+- Major Project restructuring

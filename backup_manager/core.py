@@ -4,28 +4,20 @@ import shutil
 import logging
 
 class BackupSystem:
-    # def __init__(self):
-    #     pass
+    def __init__(self, sysData):
+        self.sysData = sysData
 
     def syncSystem(self, srcList, dest_base, logger):
-        # Configure dirsync logger to be silent
-        dirsync_logger = logging.getLogger("dirsync")
-        dirsync_logger.disabled = True
-
-        # Load Sync directory (backupLocation)
+        # Load Sync directory (syncLocation)
         try:
             os.chdir(dest_base)
         except FileNotFoundError as e:
-            logger.error(f"Unable to open backup path: {dest_base}")
-            return
+            raise Exception(f"Unable to open syncLocation: {dest_base}")
         
-        # Load Sync directory
-        if not os.path.isdir("Sync"):
-            logger.info(f"Sync directory not found, generating directory...")
-            os.mkdir("Sync")
-            logger.info(f"Sync directory generated")
-        os.chdir("Sync")
-
+        # Configure dirsync logger to be silent
+        dirsync_logger = logging.getLogger("dirsync")
+        dirsync_logger.disabled = True
+        
         # Syncronize paths
         for path in srcList:
             logger.info(f"Syncronizing {path}...")
@@ -36,11 +28,13 @@ class BackupSystem:
             dirsync.sync(path, dest, 'sync', purge="True")
             logger.info(f"Syncronization completed for {path}")
 
-    def generateBackups(self, typeCode, doSyncBack, paths, dateCode, logger):
+    def generateBackups(self, typeCode):
+        paths = self.sysData.config["paths"]
+        logger = self.sysData.logger
+        dateCode = self.sysData.timeNow.strftime("%m-%d")
         # Valdiate backupLocation
         if not os.path.isdir(paths["backupLocation"]):
-            logger.error(f"Backup location is inaccessible: {paths['backupLocation']}")
-            return
+            raise Exception(f"Backup location is inaccessible: {paths['backupLocation']}")
         os.chdir(paths["backupLocation"])
        
         # Check if the typeCode already exists (Daily, Weekly, Etc) 
@@ -57,10 +51,9 @@ class BackupSystem:
         dest = os.getcwd()
 
         # Syncronization backup algorithm
-        if doSyncBack:
-            syncPath = os.path.join(paths["backupLocation"], "Sync")
-            for dirname in os.listdir(syncPath):
-                full_path = os.path.join(syncPath, dirname)
+        if self.sysData.config["general"]["doSyncBackup"]:
+            for dirname in os.listdir(paths["syncLocation"]):
+                full_path = os.path.join(paths["syncLocation"], dirname)
                 if os.path.isdir(full_path):
                     logger.info(f"Backing up {full_path}")
                     zip_name = f"{typeCode}_{dateCode}_Sync-{dirname}"
@@ -72,5 +65,38 @@ class BackupSystem:
             zip_name = f"{typeCode}_{dateCode}_{os.path.basename(os.path.normpath(path))}"
             shutil.make_archive(zip_name, "zip", path)
 
-    def trimBackups():
-        pass
+    def trimBackups(self):
+        path = self.sysData.config["paths"]["backupLocation"]
+        limits = self.sysData.config["limits"]
+
+        if not os.path.isdir(path):
+            raise Exception(f"Unable to open backupLocation {path}")
+        os.chdir(path)
+
+        if os.path.exists("Daily"):
+            self.trimHelper("Daily", limits["allowedDailyBackups"])
+
+        if os.path.exists("Weekly"):
+            self.trimHelper("Weekly", limits["allowedWeeklyBackups"])
+
+        if os.path.exists("Monthly"):
+            self.trimHelper("Monthly", limits["allowedMonthlyBackups"])
+
+        if os.path.exists("Yearly"):
+            self.trimHelper("Yearly", limits["allowedYearlyBackups"])
+
+    def trimHelper(self, dirCode, limit):
+        path = self.sysData.config["paths"]["backupLocation"]
+        targetDir = os.path.join(path, dirCode)
+        logger = self.sysData.logger
+        dirs = [name for name in os.listdir(targetDir)]
+
+        if len(dirs) > limit:
+            logger.info(f"{dirCode} backups exceeds the limit of {limit} backups, trimming...")       
+            old_dir = min(dirs, key=lambda d: os.path.getmtime(os.path.join(targetDir, d)))
+            old_path = os.path.join(path, dirCode, old_dir)
+            logger.info(f"removing oldest {dirCode} archive: {old_dir}...")
+            shutil.rmtree(old_path)
+            logger.info("Done")
+        else:
+            logger.info(f"{dirCode} backups within {limit} max limit")

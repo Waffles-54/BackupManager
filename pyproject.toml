@@ -1,0 +1,19 @@
+[project]
+name = "backup-manager"
+version = "0.1.0"
+description = "A configurable backup and sync utility for local systems."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Alice Cocoa", email = "47696672+Waffles-54@users.noreply.github.com" }]
+dependencies = [
+    "tomli>=2.0.0",
+    "dirsync>=2.2.6"
+]
+
+[project.scripts]
+backup-manager = "backup_manager.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

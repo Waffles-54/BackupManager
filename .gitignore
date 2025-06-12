@@ -11,3 +11,5 @@ old_sys/
 
 # Development
 TODO.md
+main_dev.
+backup_manager/config/settings.toml
